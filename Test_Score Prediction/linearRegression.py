@@ -27,18 +27,20 @@ def gradeient_descent_runner(points,starting_b,starting_m,learning_rate,num_iter
     for i in range(num_iterations):
         b,m=step_gradient(b,m,array(points),learning_rate)
         abline_values = [m * i + b for i in x_values]
-        plt.ion()
-        plt.clf()
-        plt.scatter(x_values,y_values)
-        plt.plot(x_values, abline_values)
+        ln,=plt.plot(x_values, abline_values)
         print m,b
-        plt.pause(0.1)
+        plt.pause(0.05)
+        ln.remove()
     return [b,m]
 def run():
     points=genfromtxt('data.csv',delimiter=',')
     learning_rate=0.0001    #hyper param
     #y=mx+b
-    # plt.ion()
+    plt.ion()
+    plt.axis([0,100,0,100])
+    x_values=points[:,0]
+    y_values=points[:,1]
+    plt.scatter(x_values,y_values)
     initial_b=0
     initial_m=0
     num_iterations=1000
