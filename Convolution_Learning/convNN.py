@@ -68,19 +68,21 @@ def convNet(x,weights,biases,dropout):
 	return out
 
 #Weights
-weights={'wc1':tf.Variable(tf.random_normal([5,5,1,32])),
+with tf.device("/cpu:0"):
+	weights={'wc1':tf.Variable(tf.random_normal([5,5,1,32])),
 		 'wc2':tf.Variable(tf.random_normal([5,5,32,64])),
 		 'wd1':tf.Variable(tf.random_normal([7*7*64,1024])),
 		 'out':tf.Variable(tf.random_normal([1024,n_classes]))}
 
 #biases
-biases = {
+with tf.device("/cpu:0"):
+	biases = {
     'bc1': tf.Variable(tf.random_normal([32])),
     'bc2': tf.Variable(tf.random_normal([64])),
     'bd1': tf.Variable(tf.random_normal([1024])),
     'out': tf.Variable(tf.random_normal([n_classes]))
 }
-
+saver = tf.train.Saver()
 #Construct Model
 prediction=convNet(x,weights,biases,keep_prob)
 
@@ -113,9 +115,11 @@ with tf.Session() as sess:
 			loss,acc=sess.run([cost,accuracy],feed_dict={x:batch_x,y:batch_y,keep_prob:1.})
 			print("Iter "+str(step*batch_size)+",Minibatch Loss="+ \
 			"{:.6f}".format(loss)+ ", Training Accuracy= " + \
-			"{:.5f}".format(acc))
+			"{:.5f}".format(acc))	
 		step+=1
 	#print ('Final Weights: ','WC1',sess.run(weights['wc1']),'WC2',sess.run(weights['wc2']),'WD1',sess.run(weights['wd1']),'Out',sess.run(weights['out']))
+	save_path = saver.save(sess, "/tmp/model.ckpt")
+	print("Model saved in file: %s" % save_path)	
 	print("Optimisation Done")	
 	print("Testing Accuracy:", \
         sess.run(accuracy, feed_dict={x: mnist.test.images[:256],
