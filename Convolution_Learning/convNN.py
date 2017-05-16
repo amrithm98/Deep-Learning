@@ -9,7 +9,7 @@ mnist=input_data.read_data_sets('/tmp/data',one_hot=True)
 learning_rate=0.0001
 training_iters=200000
 batch_size=128
-display_step=50
+display_step=10
 
 #network Parameters
 n_input=784 #28X28
@@ -32,6 +32,10 @@ def maxPool2d(x,k=2):
 	return tf.nn.max_pool(x,ksize=[1,k,k,1],strides=[1,k,k,1],padding='SAME')
 
 
+#Model
+#--------
+#convoluton Layer 1 ==> Max Pooling 1 ==> Convolution Layer 2 ==> Max Pooling 2 ==>Fully connected Layer1 ==>Output
+
 #Create a Model
 def convNet(x,weights,biases,dropout):
 	
@@ -53,21 +57,21 @@ def convNet(x,weights,biases,dropout):
 	#Dense Layer ==> Fully connected Layers ==> Every neuron connected to every neuron in previous layers where previous layers are 
 	#convolutional layers
 	fc1=tf.reshape(conv2,[-1,weights['wd1'].get_shape().as_list()[0]])
-	fc1=tf.add(tf.matmul(fc1,weights['wd1'],biases['bd1']))
+	fc1=tf.add(tf.matmul(fc1,weights['wd1']),biases['bd1'])
 	fc1=tf.nn.relu(fc1)
 
 	#Apply dropout
 	fc1=tf.nn.dropout(fc1,dropout)
 	
 	#Output Class Predcition
-	output=tf.add(tf.matmul(fc1,weights['out'],biases['out']))
-	return output
+	out = tf.add(tf.matmul(fc1, weights['out']), biases['out'])
+	return out
 
 #Weights
 weights={'wc1':tf.Variable(tf.random_normal([5,5,1,32])),
 		 'wc2':tf.Variable(tf.random_normal([5,5,32,64])),
 		 'wd1':tf.Variable(tf.random_normal([7*7*64,1024])),
-		 'out':tf.Variable(tf.random_normal([1042,n_classes]))}
+		 'out':tf.Variable(tf.random_normal([1024,n_classes]))}
 
 #biases
 biases = {
@@ -81,7 +85,7 @@ biases = {
 prediction=convNet(x,weights,biases,keep_prob)
 
 #Optimizer and loss functions
-cost=tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(prediction,y))
+cost=tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=prediction,labels=y))
 #AdamOptimizer,Adagrad etc are good optimizers
 Optimizer=tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
@@ -92,14 +96,14 @@ correct_prediction=tf.equal(tf.argmax(prediction,1),tf.argmax(y,1))
 accuracy=tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
 
 #Initialize variables
-init=tf.initialize_all_variables()
+init=tf.global_variables_initializer()
 
 #launch the graph
 
-with tf.Session as sess:
+with tf.Session() as sess:
 	sess.run(init)
 	step=1
-
+	#print ('Inital Weights: ','WC1',sess.run(weights['wc1']),'WC2',sess.run(weights['wc2']),'WD1',sess.run(weights['wd1']),'Out',sess.run(weights['out']))
 	#train until max iters
 	while step*batch_size <training_iters:
 		batch_x, batch_y = mnist.train.next_batch(batch_size)
@@ -111,8 +115,8 @@ with tf.Session as sess:
 			"{:.6f}".format(loss)+ ", Training Accuracy= " + \
 			"{:.5f}".format(acc))
 		step+=1
-	print "Optimisation Done!!!!"
-
+	#print ('Final Weights: ','WC1',sess.run(weights['wc1']),'WC2',sess.run(weights['wc2']),'WD1',sess.run(weights['wd1']),'Out',sess.run(weights['out']))
+	print("Optimisation Done")	
 	print("Testing Accuracy:", \
         sess.run(accuracy, feed_dict={x: mnist.test.images[:256],
                                       y: mnist.test.labels[:256],keep_prob: 1.}))
