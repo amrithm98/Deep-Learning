@@ -89,7 +89,7 @@ prediction=convNet(x,weights,biases,keep_prob)
 #Optimizer and loss functions
 cost=tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=prediction,labels=y))
 #AdamOptimizer,Adagrad etc are good optimizers
-Optimizer=tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+Optimizer=tf.train.AdagradOptimizer(learning_rate=learning_rate).minimize(cost)
 
 #evaluate model
 correct_prediction=tf.equal(tf.argmax(prediction,1),tf.argmax(y,1))
